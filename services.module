@@ -28,7 +28,7 @@ function services_help($path, $arg) {
 /**
  * Implementation of hook_perm().
  */
-function services_perm() {
+function services_permmission() {
   return array(
     'administer services',
     // File resource permissions
