@@ -29,8 +29,6 @@ function services_list_endpoint($js = NULL) {
 
   foreach ($endpoints as $endpoint) {
     $operations = array();
-
-    if (empty($endpoint->disabled)) {
       $operations[] = array(
         'title' => t('Edit'),
         'href'  => 'admin/build/services/' . $endpoint->name . '/edit',
@@ -39,7 +37,6 @@ function services_list_endpoint($js = NULL) {
         'title' => t('Export'),
         'href'  => 'admin/build/services/' . $endpoint->name . '/export',
       );
-    }
 
     if ($endpoint->export_type == (EXPORT_IN_CODE | EXPORT_IN_DATABASE)) {
       $operations[] = array(
@@ -53,7 +50,7 @@ function services_list_endpoint($js = NULL) {
         'href'  => 'admin/build/services/' . $endpoint->name . '/delete',
       );
     }
-    elseif (empty($endpoint->disabled)) {
+    elseif (empty($endpoint->resources)) {
       $operations[] = array(
         'title' => t('Disable'),
         'href'  => 'admin/build/services/' . $endpoint->name . '/disable',
@@ -67,7 +64,6 @@ function services_list_endpoint($js = NULL) {
         'query' => drupal_get_destination(),
       );
     }
-
     $auth_names = array();
     foreach (array_keys($endpoint->authentication) as $module) {
       $info = services_authentication_info($module);
@@ -78,34 +74,34 @@ function services_list_endpoint($js = NULL) {
       'data' => array(
         'title' => array(
           'data'  => $endpoint->title,
-          'class' => 'services-endpoint-title',
+          'class' => array('services-endpoint-title'),
         ),
         'path' => array(
           'data'  => l($endpoint->path, $endpoint->path),
-          'class' => 'services-endpoint-path',
+          'class' => array('services-endpoint-path'),
         ),
         'server' => array(
           'data'  => check_plain($endpoint->server),
-          'class' => 'services-endpoint-server',
+          'class' => array('services-endpoint-server'),
         ),
         'authentication' => array(
           'data'  => check_plain(join($auth_names, ', ')),
-          'class' => 'services-endpoint-authentication',
+          'class' => array('services-endpoint-authentication'),
         ),
         'storage' => array(
           'data'  => ($endpoint->export_type == EXPORT_IN_CODE) ? t('In code') : t('In database'),
-          'class' => 'services-endpoint-storage',
+          'class' => array('services-endpoint-storage'),
         ),
         'operations' => array(
-          'data'  => theme('links', $operations),
-          'class' => 'services-endpoint-operations',
+          'data'  => theme('links', array('links'=>$operations)),
+          'class' => array('services-endpoint-operations'),
         ),
       ),
-      'class' => 'services-endpoint-' . $endpoint->name . (!empty($endpoint->disabled) ? ' services-endpoint-disabled' : ''),
+      'class' => array('services-endpoint-' . $endpoint->name . (!empty($endpoint->disabled) ? ' services-endpoint-disabled' : '')),
     );
   }
-
-  $table = theme('table', $header, $rows, array('id' => 'services-list-endpoint'));
+  $variables = array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'services-list-endpoint'));
+  $table = theme('table', $variables);
 
   drupal_add_css(drupal_get_path('module', 'services') . '/css/services.admin.css');
 
@@ -139,7 +135,9 @@ function services_edit_endpoint($endpoint) {
 /**
  * Form to edit the settings of an endpoint.
  */
-function services_edit_form_endpoint(&$form_state, $endpoint) {
+function services_edit_form_endpoint(&$form_state, $form_info) {
+  list($endpoint) = $form_info['build_info']['args'];
+
   // Loading runtime include as needed by services_auth_info().
   module_load_include('runtime.inc', 'services');
 
@@ -161,7 +159,7 @@ function services_edit_form_endpoint(&$form_state, $endpoint) {
     '#maxlength'     => 255,
     '#default_value' => $endpoint->name,
     '#title'         => t('Endpoint name'),
-    '#description'   => t('A unique name used to identify this preset internally. It may only contain lowercase alpha characters and underscores. No spaces, numbers or uppercase characters.'),
+    '#description'   => t('A unique name used to identify this preset internally. It must be only be alpha characters and underscores. No spaces, numbers or uppercase characters.'),
     '#required'      => TRUE,
   );
 
@@ -205,7 +203,7 @@ function services_edit_form_endpoint(&$form_state, $endpoint) {
     $auth_options = array();
     foreach ($auth_modules as $module) {
       $info = services_authentication_info($module);
-      $auth_options[$module] = $info['title'];
+      $auth_options[$module] = $info['#title'];
     }
 
     $form['authentication'] = array(
@@ -227,13 +225,6 @@ function services_edit_form_endpoint(&$form_state, $endpoint) {
     );
   }
 
-  $form['services_use_content_permissions'] = array(
-    '#type'           => 'checkbox',
-    '#title'          => t('Apply content permissions'),
-    '#default_value'  => variable_get('services_use_content_permissions', TRUE),
-    '#description'    => t('CCK includes the optional Content Permissions module, which allows administrators to restrict access to content at the field level. By default, node services do NOT apply these permissions, causing all fields to be returned in all cases. Checking this box causes content permissions to be applied to node services.'),
-  );
-
   $label = (empty($endpoint->eid) && $endpoint->export_type != EXPORT_IN_CODE) ? t('Save and proceed') : t('Save');
   $form['submit'] = array(
     '#type'  => 'submit',
@@ -248,17 +239,20 @@ function services_edit_form_endpoint(&$form_state, $endpoint) {
  */
 function services_edit_form_endpoint_validate($form, &$form_state) {
   // Test uniqueness of name:
-  if (preg_match("/[^a-z_]/", $form_state['values']['name'])) {
-    form_error($form['name'], t('Endpoint name may only contain lowercase alpha characters and underscores.'));
+  if (preg_match("/[^A-Za-z0-9_]/", $form_state['values']['name'])) {
+    form_error($form['name'], t('Endpoint name must be alphanumeric or underscores only.'));
   }
   else {
-    $query = "SELECT eid FROM {services_endpoint} WHERE name = '%s'";
-    $args  = array($form_state['values']['name']);
+    $query = db_select('services_endpoint', 'e');
+    $query->addField('e', 'eid');
+    $query->condition('name', $form_state['values']['name']);
+
     if (!empty($form_state['values']['eid']) && is_numeric($form_state['values']['eid'])) {
-      $query .= ' AND eid != %d';
-      $args[] = $form_state['values']['eid'];
+      $query->condition('eid', $form_state['values']['eid'], '!=');
     }
-    if (db_result(db_query($query, $args))) {
+
+    $res = $query->execute()->fetchField();
+    if (!empty($res)) {
       form_error($form['name'], t('Endpoint name must be unique.'));
     }
   }
@@ -279,8 +273,8 @@ function services_edit_form_endpoint_submit($form, &$form_state) {
   // Set the authentication modules, and preserve the settings for modules
   // that already exist.
   $auth = array();
-  foreach ($form_state['values']['authentication'] as $module => $enabled) {
-    if (!empty($enabled)) {
+  if (isset($form_state['values']['authentication'])) {
+    foreach (array_keys($form_state['values']['authentication']) as $module) {
       if (isset($endpoint->authentication[$module])) {
         $auth[$module] = $endpoint->authentication[$module];
       }

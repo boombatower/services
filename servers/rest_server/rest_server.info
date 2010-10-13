@@ -4,5 +4,5 @@ description = Provides an REST server.
 package = Services - servers
 dependencies[] = services
 dependencies[] = inputstream
-dependencies[] = autoload
-core = 6.x
+
+core = 7.x
