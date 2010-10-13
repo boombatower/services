@@ -151,7 +151,6 @@ function services_menu() {
       }
     }
   }
-
   return $items;
 }
 
