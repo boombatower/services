@@ -218,7 +218,7 @@ function _user_resource_create($account) {
   );
   $form_state['values']['op'] = t('Create new account');
   
-  $ret = drupal_form_submit('user_register', $form_state);
+  $ret = drupal_form_submit('user_register_form', $form_state);
 
   // Error if needed.
   if ($errors = form_get_errors()) {

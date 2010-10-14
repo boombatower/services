@@ -163,10 +163,6 @@ function services_controller_execute($controller, $args = array(), $auth_args = 
   // Execute the controller callback
   $result = call_user_func_array($controller['callback'], $args);
 
-  if ($server_info) {
-    chdir($server_root);
-  }
-
   // Check if the result should be post-processed
   if (!empty($controller['endpoint']['postprocess'])) {
     foreach ($controller['endpoint']['postprocess'] as $callable) {
