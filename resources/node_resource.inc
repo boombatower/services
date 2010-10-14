@@ -169,12 +169,16 @@ function _node_resource_create($node) {
   module_load_include('inc', 'node', 'node.pages');
   $nid = NULL;
 
+
+  // Load the required includes for drupal_execute
+  module_load_include('inc', 'node', 'node.pages');
+  $nid = NULL;
   // Setup form_state
   $values = (array)$node;
   $form_state = array();
   $form_state['values'] = $values;
   $form_state['values']['op'] = t('Save');
-  $ret = drupal_form_submit($node->type . '_node_form', $form_state, $node);
+  drupal_form_submit($node->type . '_node_form', $form_state, $node);
 
   // Fetch $nid out of $form_state
   $nid = $form_state['nid'];
@@ -223,7 +227,8 @@ function _node_resource_update($nid, $node) {
     $form_state['values']['op'] = t('Save');
     $form_state['node'] = (array)$old_node;
 
-    drupal_execute($old_node->type . '_node_form', $form_state, $old_node);
+    drupal_form_submit($node->type . '_node_form', $form_state, $old_node);
+
 
     if ($errors = form_get_errors()) {
       return services_error(implode("\n", $errors), 406);
@@ -245,7 +250,7 @@ function _node_resource_update($nid, $node) {
  *   The node's nid.
  **/
 function _node_resource_delete($nid) {
-  return node_delete($nid);
+  node_delete($nid);
   return TRUE;
 }
 

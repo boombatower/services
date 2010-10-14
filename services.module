@@ -65,6 +65,7 @@ function services_menu() {
     'description'    => 'Manage how external applications communicates with Drupal.',
     'page callback'  => 'services_list_endpoint',
   ) + $base;
+
   $items['admin/config/services/services/list'] = array(
     'title'          => 'List',
     'page callback'  => 'services_list_endpoint',
