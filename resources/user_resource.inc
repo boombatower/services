@@ -218,7 +218,7 @@ function _user_resource_create($account) {
   );
   $form_state['values']['op'] = t('Create new account');
   
-  $ret = drupal_execute('user_register', $form_state);
+  $ret = drupal_form_submit('user_register', $form_state);
 
   // Error if needed.
   if ($errors = form_get_errors()) {
@@ -329,11 +329,10 @@ function _user_resource_login($username, $password) {
     return services_error(t('Already logged in as !user.', array('!user' => $user->name)), 406);
   }
 
-  $user = user_authenticate(array('name' => $username, 'pass' => $password));
-
+  $user = user_load(user_authenticate($username, $password));
   if ($user->uid) {
     // Regenerate the session ID to prevent against session fixation attacks.
-    sess_regenerate();
+    drupal_session_regenerate();
     module_invoke_all('user', 'login', NULL, $user);
 
     $return = new stdClass();
