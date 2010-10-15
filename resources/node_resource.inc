@@ -168,11 +168,6 @@ function _node_resource_create($node) {
   // Load the required includes for drupal_execute
   module_load_include('inc', 'node', 'node.pages');
   $nid = NULL;
-
-
-  // Load the required includes for drupal_execute
-  module_load_include('inc', 'node', 'node.pages');
-  $nid = NULL;
   // Setup form_state
   $values = (array)$node;
   $form_state = array();
