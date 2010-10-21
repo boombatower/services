@@ -340,7 +340,8 @@ function _node_resource_access($op = 'view', $args = array()) {
   else if ($op == 'create') {
     $node = $args[0]->type;
   }
-  if($node->nid == '') {
+  //Node doesnt exist, needs to return true so that a proper HTTP status message may be issued
+  if(!$node->nid) {
     return TRUE;
   }
   return node_access($op, $node);
