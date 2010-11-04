@@ -172,9 +172,17 @@ function _node_resource_create($node) {
   $values = (array)$node;
   $form_state = array();
   $form_state['values'] = $values;
-  $form_state['values']['op'] = t('Save');
-  drupal_form_submit($node->type . '_node_form', $form_state, $node);
+  $form_state['values']['op'] = t('Save');  
 
+  //Wanted to return a gracefull error instead of a blank nid, this should allow for that.
+  $types = node_type_get_types();
+  if(array_key_exists($node->type, $types)) {
+    drupal_form_submit($node->type . '_node_form', $form_state, $node);
+  } else {
+    return services_error('Node type "'. $node->type .'" does not exist.', 406);
+  }
+  
+  
   // Fetch $nid out of $form_state
   $nid = $form_state['nid'];
 

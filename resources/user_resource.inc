@@ -225,7 +225,11 @@ function _user_resource_create($account) {
     return services_error(implode(" ", $errors), 401);
   }
   else {
-    return $form_state['user'];
+    $user = array('uid' => $form_state['user']->uid);
+    if ($uri = services_resource_uri(array('user', $user['uid']))) {
+      $user['uri'] = $uri;
+    }
+    return $user;
   }
 }
 

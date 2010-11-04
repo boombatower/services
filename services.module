@@ -28,7 +28,7 @@ function services_help($path, $arg) {
 /**
  * Implementation of hook_perm().
  */
-function services_permmission() {
+function services_permmissions() {
   return array(
     'administer services',
     // File resource permissions
@@ -222,7 +222,6 @@ function services_endpoint_callback($endpoint_name) {
       'endpoint_path' => $endpoint->path,
       'drupal_path'   => getcwd(),
     ));
-
     print call_user_func($server . '_server');
 
     // Do not let this output
