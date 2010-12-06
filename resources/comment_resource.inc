@@ -295,13 +295,10 @@ function _comment_resource_delete($cid) {
  */
 function _comment_resource_load_node_comments($nid, $count = 0, $start = 0) {
   $comments = array();
-  $limit = ((int)$count > 0 ? ' LIMIT '. (int)$start .', '. (int)$count .' ' : '');
-
-  $result = db_query("SELECT cid FROM {comments} WHERE nid = %d ORDER BY thread DESC". $limit, $nid);
-  while ($comment = db_fetch_array($result)) {
-    $comments[] = _comment_load($comment['cid']);
+  $result = db_query_range('SELECT c.cid FROM {comment} c WHERE c.nid = :nid', 0, 10, array(':nid' => $nid['nid']));
+  foreach ($result as $record) {
+        $comments[] = _comment_load($comment->cid);
   }
-
   return $comments;
 }
 
