@@ -295,9 +295,9 @@ function _comment_resource_delete($cid) {
  */
 function _comment_resource_load_node_comments($nid, $count = 0, $start = 0) {
   $comments = array();
-  $result = db_query_range('SELECT c.cid FROM {comment} c WHERE c.nid = :nid', 0, 10, array(':nid' => $nid['nid']));
+  $result = db_query_range('SELECT c.cid FROM {comment} c WHERE c.nid = :nid', 0, 10, array(':nid' => $nid));
   foreach ($result as $record) {
-        $comments[] = _comment_load($comment->cid);
+        $comments[] = comment_load($record->cid);
   }
   return $comments;
 }

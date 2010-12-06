@@ -16,11 +16,9 @@ class RESTServer {
 
     // Determine the request method
     $method = $_SERVER['REQUEST_METHOD'];
-/*
     if ($method=='POST' && $_GET['_method']) {
       $method = $_GET['_method'];
     }
-*/
     $path = split('/', $canonical_path);
     $leaf = array_pop($path);
     $resource_name = array_shift($path);
@@ -69,6 +67,9 @@ class RESTServer {
     $data = array();
     $arguments = $this->getControllerArguments($controller, $path, $method, $data);
 
+    // Any authentication needed for REST Server must be set in the cookies
+    $auth_arguments = $_COOKIE;
+
     $formats = $this->responseFormatters();
 
     // Negotiate response format based on accept-headers if we
@@ -89,8 +90,11 @@ class RESTServer {
       }
 
       // Get the best matching format, default to json
-      $mime = new Mimeparse();
-      $mime_type = $mime->best_match($mime_candidates, $_SERVER['HTTP_ACCEPT']);
+      if (isset($_SERVER['HTTP_ACCEPT'])) {
+        $mime = new Mimeparse();
+        $mime_type = $mime->best_match($mime_candidates, $_SERVER['HTTP_ACCEPT']);
+      }
+
       if ($mime_type) {
         $response_format = $mime_map[$mime_type];
       }
@@ -135,7 +139,8 @@ class RESTServer {
         }
       }
     }
-    $result = services_controller_execute($controller, $arguments);
+
+    $result = services_controller_execute($controller, $arguments, $auth_arguments);
     $formatter = $formats[$response_format];
 
     // Set the content type and render output
@@ -175,12 +180,16 @@ class RESTServer {
     unset($parameters['_method']);
     $data = $this->parseRequest($method, $controller);
 
-    $sources += array(
+    $defaults = array(
       'path' => $path,
       'param' => $parameters,
       'data' => $data,
     );
-
+    foreach ($defaults as $key => $data) {
+      if (!isset($sources[$key])) {
+        $sources[$key] = $data;
+      }
+    }
     // Map source data to arguments.
     $arguments = array();
     if (isset($controller['args'])) {
@@ -195,8 +204,15 @@ class RESTServer {
             }
           }
           else {
-            if (isset($sources[$info['source']])) {
-              $arguments[$i] = $sources[$info['source']];
+            // When the type is 'array' or 'struct', we assume that it requires
+            // the posted data as one big chunk (as in when posting a new node.)
+            // Otherwise, retrieve each piece of data as individual named 
+            // arguments (as in when posting an action.)
+            if ($info['type'] == 'array' || $info['type'] == 'struct') {
+              $arguments[$i] = $sources[$info['source']];                
+            }
+            else {
+              $arguments[$i] = $sources[$info['source']][$info['name']];
             }
           }
           // Convert arrays to objects and objects to arrays to be more tolerant
@@ -224,7 +240,7 @@ class RESTServer {
           }
           else if (!isset($info['optional']) || !$info['optional']) {
             throw new ServicesArgumentException(t('Missing required argument !arg', array(
-              '!arg' => $info['name'])), $info['name'], 406, $data);
+              '!arg'=>$info['name'])), $info['name'], 406);
           }
         }
       }
@@ -521,7 +537,11 @@ class RESTServer {
         'DELETE' => 'delete',
       );
       if (isset($resource[$action_mapping[$method]])) {
-        return $resource[$action_mapping[$method]];
+        $controller = $resource[$action_mapping[$method]];
+        if (isset($resource['file'])) {
+          $controller['file'] = $resource['file'];
+        }
+        return $controller;
       }
     }
     // Detect relationship requests
