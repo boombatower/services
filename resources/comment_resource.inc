@@ -371,6 +371,5 @@ function _comment_resource_access($op = 'view', $args = array()) {
  **/
 function _comment_resource_node_access($op = 'view', $args = array()) {
   module_load_include('inc', 'services', 'resources/node_resource');
-  
   return _node_resource_access($op, $args);
 }
