@@ -92,7 +92,7 @@ function _user_resource_definition() {
             'optional' => TRUE,
             'type' => 'int',
             'description' => 'The zero-based index of the page to get, defaults to 0.',
-            'default value' => 0,
+            'default value' => 1,
             'source' => array('param' => 'page'),
           ),
           array(
@@ -282,11 +282,11 @@ function _user_resource_update($uid, $account) {
   $form_state['values']['_category'] = $category;
   $form_state['values']['_account'] = $account;
 
-  $ret = drupal_execute('user_profile_form', $form_state, $account, $category);
+  $ret = drupal_form_submit('user_register_form', $form_state);
 
   // Error if needed.
   if ($errors = form_get_errors()) {
-    return services_error(implode(" ", $errors), 409);
+    return services_error(implode(" ", $errors), 401);
   }
   else {
     return $account;
@@ -395,37 +395,24 @@ function _user_resource_logout() {
  *
  * @see _node_resource_index() for more notes
  **/
-function _user_resource_index($page = 0, $fields = '*', $parameters = array()) {
-  $parameters = (array) $parameters;
-  $schema = drupal_get_schema('node');
-  $where = array();
-  $fields = db_escape_string($fields);
-
-  $parameters = (array)$parameters;
-  if (!user_access('administer users')) {
-    $parameters['active'] = 1;
+function _user_resource_index($page = 1, $fields = '*', $parameters = array()) {
+  $user_select = db_select('users', 'u')->extend('PagerDefault');
+  if($fields == '*') { 
+    $user_select->fields('u');  
+  } else {
+    $fields = explode(',', $fields);
+    $user_select->fields('u', $fields);
   }
- 
-  // Build an array of fields with the appropriate placeholders for use in
-  // db_query().
-  foreach ($parameters as $field => $value) {
-    $where[] = $field . ' = ' . db_type_placeholder($schema['fields'][$field]['type']);
-  }
-
-  // Now implode that array into an actual WHERE clause.
-  $where = !empty($where) ? ' WHERE '. db_escape_string(implode(' AND ', $where)) : '';
-  $sql = "SELECT $fields FROM {users} $where";
-  $result = db_query_range($sql, $parameters, $page * 20, 20);
-
-  // Put together array of matching accounts to return.
-  $accounts = array();
-  while ($account = db_fetch_object($result)) {
-    if ($uri = services_resource_uri(array('user', $account->uid))) {
-      $account->uri = $uri;
+  $user_select->orderBy('created', 'DESC');
+  $user_select->limit($page * 20);
+  $result = $user_select->execute();
+  foreach($result as $user) {  
+    if ($uri = services_resource_uri(array('user', $user->uid))) {
+      $user->uri = $uri;
     }
-    $accounts[$account->uid] = $account;
+    $users[] = $user;
   }
-  return $accounts;
+  return $users;
 }
 
 /**
