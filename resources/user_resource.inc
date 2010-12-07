@@ -306,7 +306,7 @@ function _user_resource_delete($uid) {
   if (empty($account)) {
     return services_error(t('There is no user with such ID.'), 404);
   }
-  user_delete($account, $uid);
+  user_delete($uid);
 
   // Everything went right.
   return TRUE;
