@@ -82,7 +82,7 @@ function _node_resource_definition() {
             'optional' => TRUE,
             'type' => 'int',
             'description' => 'The zero-based index of the page to get, defaults to 0.',
-            'default value' => 0,
+            'default value' => 1,
             'source' => array('param' => 'page'),
           ),
           array(
@@ -283,42 +283,27 @@ function _node_resource_delete($nid) {
  *     - Is there an easier syntax we can define which can make the urls
  *       for index requests more straightforward?
  **/
-function _node_resource_index($page = 0, $fields = '*', $parameters = array()) {
-  $parameters = (array) $parameters;
-  $schema = drupal_get_schema('node');
-  $where = array();
-  $fields = db_escape_string($fields);
-
-
-  // Limit to published nodes if user doesn't have 'administer nodes'
-  // permissions.
+function _node_resource_index($page = 1, $fields = '*', $parameters = array()) {
+  $node_select = db_select('node', 'n')->extend('PagerDefault');
+  if($fields == '*') { 
+    $node_select->fields('n');  
+  } else {
+    $fields = explode(',', $fields);
+    $node_select->fields('n', $fields);
+  }
+  $node_select->orderBy('sticky', 'DESC');
+  $node_select->orderBy('created', 'DESC');
   if (!user_access('administer nodes')) {	
-    $parameters['status'] = 1;
+      $node_select->condition('status', 1);    
   }
-  
-  // Build an array of fields with the appropriate placeholders for use in
-  // db_query().
-  foreach ($parameters as $field => $value) {
-    $where[] = $field . ' = ' . db_type_placeholder($schema['fields'][$field]['type']);
-  }
-
-  // Now implode that array into an actual WHERE clause.
-  $where = !empty($where) ? ' WHERE '. db_escape_string(implode(' AND ', $where)) : '';
-
-  // Run through db_rewrite_sql to make sure proper access checks are applied.
-  $sql = "SELECT $fields FROM {node} $where ORDER BY sticky DESC, created DESC";
-  $sql = db_rewrite_sql($sql);
-  $result = db_query_range($sql, $parameters, $page * 20, 20);
-
-  // Put together array of matching nodes to return.
-  $nodes = array();
-  while ($node = db_fetch_object($result)) {
+  $node_select->limit($page * 20);
+  $result = $node_select->execute();
+  foreach($result as $node) {  
     if ($uri = services_resource_uri(array('node', $node->nid))) {
       $node->uri = $uri;
     }
     $nodes[] = $node;
   }
-
   return $nodes;
 }
 
