@@ -255,8 +255,8 @@ function _taxonomy_term_resource_retrieve($tid) {
  * @see taxonomy_save_term().
  */
 function _taxonomy_term_resource_create($term) {
-  $term = (array) $term;
-  return taxonomy_save_term($term);
+  $term = (object)$term;
+  return taxonomy_term_save($term);
 }
 
 /**
@@ -272,8 +272,8 @@ function _taxonomy_term_resource_create($term) {
  * @see taxonomy_save_term().
  */
 function _taxonomy_term_resource_update($tid, $term) {
-  $term = (array) $term;
-  $term['tid'] = $tid;
+  $term = (object) $term;
+  $term->tid = $tid;
   return _taxonomy_term_resource_create($term);
 }
 
@@ -288,7 +288,7 @@ function _taxonomy_term_resource_update($tid, $term) {
  * @see taxonomy_del_term().
  */
 function _taxonomy_term_resource_delete($tid) {
-  return taxonomy_del_term($tid);
+  return taxonomy_term_delete($tid);
 }
 
 
