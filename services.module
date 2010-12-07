@@ -28,16 +28,34 @@ function services_help($path, $arg) {
 /**
  * Implementation of hook_perm().
  */
-function services_permmissions() {
+function services_permission() {
   return array(
-    'administer services',
+    'administer services' => array(
+      'title' => t('Administer services'), 
+      'description' => t('Configure and setup services module.'),
+    ),
     // File resource permissions
-    'get any binary files',
-    'get own binary files',
-    'save file information',
+    'get any binary files' => array(
+      'title' => t('Get any binary files'), 
+      'description' => t(''),
+    ),
+    'get own binary files' => array(
+      'title' => t('Get own binary files'), 
+      'description' => t(''),
+    ),
+    'save file information' => array(
+      'title' => t('Save file information'), 
+      'description' => t(''),
+    ),
     // System resource permissions
-    'get a system variable',
-    'set a system varaible',
+    'get a system variable' => array(
+      'title' => t('Get a system variable'),
+      'description' => t(''),
+    ),
+    'set a system variable' => array(
+      'title' => t('Set a system variable'), 
+      'description' => t(''),
+    ),
   );
 }
 
