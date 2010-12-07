@@ -91,37 +91,23 @@ function _taxonomy_resource_definition() {
           'callback' => 'taxonomy_service_select_nodes',
           'args'     => array(
             array(
-              'name'         => 'tids',
+              'name'         => 'tid',
               'type'         => 'string',
               'description'  => t('The vocabulary ids to retrieve, separated by comma.'),
               'source'       => 'data',
               'optional'     => FALSE,
             ),
             array(
-              'name'         => 'fields',
-              'type'         => 'string',
-              'description'  => t('The fields to retrieve, separated by comma.'),
-              'source'       => 'data',
-              'optional'     => TRUE,
-            ),
-            array(
-              'name'         => 'operator',
-              'type'         => 'string',
-              'description'  => t('How to interpret multiple IDs in the array. Can be "or" or "and".'),
-              'source'       => 'data',
-              'optional'     => TRUE,
-            ),
-            array(
-              'name'         => 'depth',
-              'type'         => 'int',
-              'description'  => t('How many levels deep to traverse the taxonomy tree. Can be a nonnegative integer or "all".'),
-              'source'       => 'data',
-              'optional'     => TRUE,
-            ),
-            array(
               'name'         => 'pager',
               'type'         => 'int',
               'description'  => t('Whether the nodes are to be used with a pager (the case on most Drupal pages) or not (in an XML feed, for example).'),
+              'source'       => 'data',
+              'optional'     => TRUE,
+            ),
+            array(
+              'name'         => 'limit',
+              'type'         => 'int',
+              'description'  => t('Maximum number of nodes to find.'),
               'source'       => 'data',
               'optional'     => TRUE,
             ),
@@ -395,7 +381,7 @@ function _taxonomy_vocabulary_resource_delete($vid) {
  *   taxonomy_get_tree()
  */
 function taxonomy_service_get_tree($vid, $parent = 0, $max_depth = NULL) {
-  $terms = taxonomy_get_tree($vid, $parent, -1, $max_depth);
+  $terms = taxonomy_get_tree($vid, $parent, $max_depth);
   if(empty($terms)) {
     return services_error('No vocabulary with id: '. $vid .' found.', 404);
   }
@@ -413,19 +399,17 @@ function taxonomy_service_get_tree($vid, $parent = 0, $max_depth = NULL) {
  * @return 
  *   An array of node objects.
  */
-function taxonomy_service_select_nodes($tids = '', $fields = array(), $operator = 'or', $depth = 0, $pager = TRUE, $order = 'n.sticky DESC, n.created DESC') {
-  if(!is_array($tids)) {
-   $tids =  explode(',', $tids);
-  }
-  if(!is_array($fields)) {
-   $fields =  explode(',', $fields);
-  }
-  $result = taxonomy_select_nodes($tids, $operator, $depth, $pager, $order);
-  while ($node = db_fetch_object($result)) {
-    $nodes[] = services_node_load(node_load($node->nid), $fields);
+function taxonomy_service_select_nodes($tid = '', $pager = TRUE, $limit = FALSE,  $order = array('t.sticky' => 'DESC', 't.created' => 'DESC')) {
+  $result = taxonomy_select_nodes($tid, $pager, $limit, $order);
+  foreach($result as $nid) {  
+    if ($uri = services_resource_uri(array('node', $nid))) {
+      $node = node_load($nid);
+      $node->uri = $uri;
+    }
+    $nodes[] = $node;
   }
   if(empty($nodes)) {
-    return services_error('No nodes were found with tid(s): '. implode(",", $tids), 404);
+    return services_error('No nodes were found with tid(s): '. implode(",", $tid), 404);
   }
   return $nodes;
 }
