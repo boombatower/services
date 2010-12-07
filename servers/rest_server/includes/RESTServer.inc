@@ -182,7 +182,7 @@ class RESTServer {
 
     $defaults = array(
       'path' => $path,
-      'param' => $parameters,
+      'params' => $parameters,
       'data' => $data,
     );
     foreach ($defaults as $key => $data) {
@@ -212,6 +212,7 @@ class RESTServer {
               $arguments[$i] = $sources[$info['source']];                
             }
             else {
+              if(isset($sources[$info['source']][$info['name']]))
               $arguments[$i] = $sources[$info['source']][$info['name']];
             }
           }
