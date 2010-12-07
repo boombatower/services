@@ -243,6 +243,9 @@ class RESTServer {
             throw new ServicesArgumentException(t('Missing required argument !arg', array(
               '!arg'=>$info['name'])), $info['name'], 406);
           }
+          else {
+            $arguments[$i] = NULL;
+          }
         }
       }
     }
