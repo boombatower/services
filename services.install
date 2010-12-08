@@ -53,13 +53,19 @@ function services_schema() {
         'serialize'      => TRUE,
         'object default' => array(),
       ),
-      'resources' => array(
-        'description'    => 'Information about the resources exposed in this endpoint.',
-        'type'           => 'text',
-        'size'           => 'big',
-        'not null'       => TRUE,
-        'serialize'      => TRUE,
-        'object default' => array(),
+      'debug' => array(
+       'description' => 'Set the endpoint in debug mode.',
+         'type'        => 'int',
+         'length'      => 2,
+         'not null'    => TRUE,
+         'default'     => 0
+      ),
+      'status' => array(
+       'description' => 'Endpoint is enabled.',
+       'type'        => 'int',
+       'length'      => 2,
+       'not null'    => TRUE,
+       'default'     => 1
       ),
     ),
     'primary key' => array('eid'),
@@ -99,4 +105,11 @@ function services_uninstall() {
   variable_del('services_use_sessid');
   variable_del('services_debug');
   variable_del('services_auth_module');
+}
+/**
+ * Update 7301 adds debugging to each endopint to facilitate easier development
+ */
+function services_update_7301() {
+  db_add_field('services_endpoint', 'debug', array('type' => 'int', 'not null' => TRUE, 'default' => 0));
+  db_add_field('services_endpoint', 'status', array('type' => 'int', 'not null' => TRUE, 'default' => 1));
 }

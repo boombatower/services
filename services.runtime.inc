@@ -96,18 +96,11 @@ class ServicesArgumentException extends ServicesException {
  *  made.
  */
 function services_controller_execute($controller, $args = array(), $auth_args = array(), $options = array()) {
-  // Check for missing arguments.
-  if(is_array($controller['args']))
-  foreach ($controller['args'] as $key => $arg) {
-    if (!$arg['optional']) {
-      if (!isset($args[$key]) && !is_array($args[$key]) && !is_bool($args[$key])) {
-        return services_error(t('Missing required argument !name.', array(
-          '!name' => $key,
-        )), 406);
-      }
-    }
+  $server_info =  services_server_info_object();
+  if($server_info->debug) {
+    watchdog('services', '<pre>Controller: '. print_r($controller, 1));
+    watchdog('services', '<pre>Passed arguments: '. print_r($args, 1));
   }
-
   // Check authentication
   if (!isset($options['skip_authentication']) || !$options['skip_authentication']) {
     $endpoint_name = services_get_server_info('endpoint');
@@ -150,7 +143,7 @@ function services_controller_execute($controller, $args = array(), $auth_args = 
   // then change it back to server module root to handle return.
   $server_root = getcwd();
   $drupal_path = services_get_server_info('drupal_path');
-  if ($drupal_path) {
+  if (isset($drupal_path) && $drupal_path) {
     chdir($drupal_path);
   }
 

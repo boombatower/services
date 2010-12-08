@@ -19,7 +19,7 @@ class RESTServer {
     if ($method=='POST' && $_GET['_method']) {
       $method = $_GET['_method'];
     }
-    $path = split('/', $canonical_path);
+    $path = explode('/', $canonical_path);
     $leaf = array_pop($path);
     $resource_name = array_shift($path);
     // Extract response format info from the path
@@ -95,7 +95,7 @@ class RESTServer {
         $mime_type = $mime->best_match($mime_candidates, $_SERVER['HTTP_ACCEPT']);
       }
 
-      if ($mime_type) {
+      if (isset($mime_type) && $mime_type) {
         $response_format = $mime_map[$mime_type];
       }
       else {
@@ -221,7 +221,7 @@ class RESTServer {
           // objects as php does.
           switch ($info['type']) {
             case 'struct':
-              if (is_array($arguments[$i])) {
+              if (isset($arguments[$i]) && is_array($arguments[$i])) {
                 $arguments[$i] = (object)$arguments[$i];
               }
               break;
