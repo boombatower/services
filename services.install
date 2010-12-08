@@ -53,6 +53,14 @@ function services_schema() {
         'serialize'      => TRUE,
         'object default' => array(),
       ),
+      'resources' => array(
+        'description'    => 'Information about the resources exposed in this endpoint.',
+        'type'           => 'text',
+        'size'           => 'big',
+        'not null'       => TRUE,
+        'serialize'      => TRUE,
+        'object default' => array(),
+      ),
       'debug' => array(
        'description' => 'Set the endpoint in debug mode.',
          'type'        => 'int',
