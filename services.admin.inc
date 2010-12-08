@@ -439,6 +439,8 @@ function services_enable_endpoint($endpoint) {
   }
   $endpoint->status = 1;
   services_endpoint_save($endpoint);
+ cache_clear_all(NULL, 'cache_menu');
+  menu_rebuild();
   drupal_goto();
 }
 
@@ -451,6 +453,8 @@ function services_disable_endpoint($endpoint) {
   }
   $endpoint->status = 0;
   services_endpoint_save($endpoint);
+ cache_clear_all(NULL, 'cache_menu');
+  menu_rebuild();
   drupal_goto();
 }
 

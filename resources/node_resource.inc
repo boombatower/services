@@ -228,8 +228,7 @@ function _node_resource_update($nid, $node) {
     $form_state = array();
     $form_state['values'] = $values;
     $form_state['values']['op'] = t('Save');
-    $form_state['node'] = (array)$old_node;
-
+    $form_state['node'] = $old_node;
     drupal_form_submit($node->type . '_node_form', $form_state, $old_node);
 
 
@@ -333,6 +332,9 @@ function _node_resource_access($op = 'view', $args = array()) {
   else if ($op == 'create') {
     $node = $args[0]->type;
   }
-
-  return node_access($op, $node);
+  if($node->nid) {
+    return node_access($op, $node);
+  } else {
+    return services_error('Node id: '. $args[0]->nid .' could not be found', 404);
+  }
 }

@@ -249,7 +249,6 @@ function _user_resource_create($account) {
  */
 function _user_resource_update($uid, $account) {
   $account->uid = $uid;
-
   // Load the required includes for saving profile information
   // with drupal_execute().
   module_load_include('inc', 'user', 'user.pages');
@@ -263,7 +262,7 @@ function _user_resource_update($uid, $account) {
   if (isset($account->roles[2])) {
     $account->roles[2] = 0;
   }
-
+  
   // If a profile category was passed in, use it. Otherwise default
   // to 'account' (for saving core user data.)
   $category = 'account';
@@ -278,11 +277,17 @@ function _user_resource_update($uid, $account) {
     $form_state['values'][$key] = $value;
   }
 
+  if(!isset($account->pass1) && !isset($account->pass2)) {
+      $account->pass1 = $account->pass;
+      $account->pass2 = $account->pass;
+  }
   $form_state['values']['op'] = 'Save';
-  $form_state['values']['_category'] = $category;
-  $form_state['values']['_account'] = $account;
+  $form_state['values']['pass']['pass1'] = $account->pass1;
+  $form_state['values']['pass']['pass2'] = $account->pass1;
+  $form_state['values']['#user_category'] = $category;
+  $form_state['values']['#account'] = (object)$account;
 
-  $ret = drupal_form_submit('user_register_form', $form_state);
+  $ret = drupal_form_submit('user_profile_form', $form_state, $account, $category);
 
   // Error if needed.
   if ($errors = form_get_errors()) {
@@ -420,9 +425,9 @@ function _user_resource_index($page = 1, $fields = '*', $parameters = array()) {
  */
 function _user_resource_access($op = 'view', $args = array()) {
   global $user;
+  $account = user_load($args[0]);
   switch($op) {
     case 'view':
-      $account = user_load($args[0]);
       return user_view_access($account);
     case 'update':
       $args[0] = $account;
