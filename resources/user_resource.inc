@@ -222,7 +222,7 @@ function _user_resource_create($account) {
 
   // Error if needed.
   if ($errors = form_get_errors()) {
-    return services_error(implode(" ", $errors), 409);
+    return services_error(implode(" ", $errors), 406);
   }
   else {
     $user = array('uid' => $form_state['user']->uid);
