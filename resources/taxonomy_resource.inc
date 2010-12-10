@@ -110,6 +110,7 @@ function _taxonomy_resource_definition() {
               'description'  => t('Maximum number of nodes to find.'),
               'source'       => 'data',
               'optional'     => TRUE,
+              'default value' => FALSE,
             ),
             array(
               'name'         => 'order',
@@ -402,7 +403,7 @@ function taxonomy_service_get_tree($vid, $parent = 0, $max_depth = NULL) {
  *   An array of node objects.
  */
 function taxonomy_service_select_nodes($tid = '', $pager = TRUE, $limit = FALSE,  $order = array('t.sticky' => 'DESC', 't.created' => 'DESC')) {
-  $result = taxonomy_select_nodes($tid, $pager, $limit, $order);
+  $result = taxonomy_select_nodes($tid, (bool)$pager, $limit, $order);
   foreach($result as $nid) {  
     if ($uri = services_resource_uri(array('node', $nid))) {
       $node = node_load($nid);
@@ -411,7 +412,7 @@ function taxonomy_service_select_nodes($tid = '', $pager = TRUE, $limit = FALSE,
     $nodes[] = $node;
   }
   if(empty($nodes)) {
-    return services_error('No nodes were found with tid(s): '. implode(",", $tid), 404);
+    return services_error('No nodes were found with tid: '. $tid, 404);
   }
   return $nodes;
 }

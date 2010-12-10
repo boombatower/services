@@ -155,6 +155,9 @@ function services_controller_execute($controller, $args = array(), $auth_args = 
   }
 
   // Execute the controller callback
+  if($server_info->debug) {
+    watchdog('services', '<pre>clled arguments: '. print_r($args, 1));
+  }
   $result = call_user_func_array($controller['callback'], $args);
 
   // Check if the result should be post-processed

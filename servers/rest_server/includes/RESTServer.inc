@@ -16,7 +16,7 @@ class RESTServer {
 
     // Determine the request method
     $method = $_SERVER['REQUEST_METHOD'];
-    if ($method=='POST' && $_GET['_method']) {
+    if ($method=='POST' && (isset($_GET['_method']) && $_GET['_method'])) {
       $method = $_GET['_method'];
     }
     $path = explode('/', $canonical_path);
@@ -177,7 +177,10 @@ class RESTServer {
   private function getControllerArguments($controller, $path, $method, &$sources=array()) {
     // Get argument sources
     $parameters = $_GET;
-    unset($parameters['_method']);
+    if(isset($parameters['_method'])) {
+      unset($parameters['_method']);
+    }
+
     $data = $this->parseRequest($method, $controller);
 
     $defaults = array(
@@ -232,7 +235,6 @@ class RESTServer {
               break;
           }
         }
-
         // When argument isn't set, insert default value if provided or
         // throw a exception if the argument isn't optional.
         if (!isset($arguments[$i])) {

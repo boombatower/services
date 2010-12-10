@@ -222,7 +222,7 @@ function _comment_resource_create($comment) {
  *   The comment object
  */
 function _comment_resource_retrieve($cid) {
-  return _comment_load($cid);
+  return comment_load($cid);
 }
 
 /**
@@ -344,7 +344,7 @@ function _comment_resource_access($op = 'view', $args = array()) {
     $comment = (object)$args[0];
   }
   else {
-    $comment = _comment_load($args[0]);
+    $comment = comment_load($args[0]);
   }
 
   switch ($op) {
