@@ -203,13 +203,11 @@ function _comment_resource_create($comment) {
     }
   }
 
-  // Can I just make a note here about how stupid it is that comment_load returns
-  // an object but comment_save expects an array?
-  $cid = comment_save((array) $comment);
+  comment_save($comment);
 
   return (object)array(
-    'cid' => $cid,
-    'uri' => services_resource_uri(array('comment', $cid)),
+    'cid' => $comment->cid,
+    'uri' => services_resource_uri(array('comment', $comment->cid)),
   );
 }
 
@@ -315,7 +313,8 @@ function _comment_resource_load_node_comments($nid, $count = 0, $start = 0) {
  *   Number of comments that node has.
  */
 function _comment_resource_count_all($nid) {
-  return comment_num_all($nid);
+  $node = node_load($nid);
+  return $node->comment_count;
 }
 
 /**
